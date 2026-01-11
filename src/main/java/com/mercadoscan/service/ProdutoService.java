@@ -15,14 +15,32 @@ public class ProdutoService {
     public ProdutoService(String usuarioId) {
         this.usuarioId = usuarioId;
         this.produtoDAO = new ProdutoDAOImpl();
+
+        System.out.println("DEBUG ProdutoService criado:");
+        System.out.println("  usuarioId recebido: " + usuarioId);
     }
     
-    public Produto adicionarProduto(String nome, double valor, int quantidade) {
-        Produto produto = new Produto(nome, valor, usuarioId);
+public void adicionarProduto(String nome, double valor, int quantidade) {
+        System.out.println("=== DEBUG ProdutoService.adicionarProduto ===");
+        System.out.println("usuarioId: " + this.usuarioId);
+        System.out.println("nome: " + nome);
+        System.out.println("valor: " + valor);
+        System.out.println("quantidade: " + quantidade);
+        
+        Produto produto = new Produto();
+        produto.setNome(nome);
+        produto.setValor(valor);
         produto.setQuantidade(quantidade);
-        return produtoDAO.salvar(produto);
+        produto.setUsuarioId(this.usuarioId);
+        
+        System.out.println("DEBUG: Produto criado - usuarioId definido: " + produto.getUsuarioId());
+        System.out.println("DEBUG: Chamando produtoDAO.salvar...");
+        
+        produtoDAO.salvar(produto);
+        
+        System.out.println("DEBUG: Produto salvo no DAO");
     }
-    
+
     public Produto adicionarProdutoVoz(ProdutoVoz produtoVoz) {
         Produto produto = new Produto(produtoVoz.getNome(), produtoVoz.getValor(), usuarioId);
         produto.setQuantidade(produtoVoz.getQuantidade());
@@ -57,4 +75,21 @@ public class ProdutoService {
     public int contarProdutos() {
         return produtoDAO.buscarPorUsuario(usuarioId).size();
     }
+
+public List<Produto> listarProdutosPorUsuario(String usuarioId) {
+    System.out.println("=== DEBUG ProdutoService.listarProdutosPorUsuario ===");
+    System.out.println("Buscando produtos para usuarioId: " + usuarioId);
+    
+    List<Produto> produtos = produtoDAO.listarPorUsuarioId(usuarioId);
+    System.out.println("DEBUG: " + produtos.size() + " produtos encontrados");
+    
+    return produtos;
+}
+public void removerProdutoPorNome(String nome, String usuarioId) {
+    produtoDAO.removerPorNomeEUsuario(nome, usuarioId);
+}
+
+public void limparListaUsuario(String usuarioId) {
+    produtoDAO.removerTodosPorUsuario(usuarioId);
+}
 }

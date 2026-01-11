@@ -8,8 +8,8 @@ public class Produto {
     private double valor;
     private int quantidade;
     private String categoria;
-    private LocalDateTime dataAdicao;
     private String usuarioId;
+    private LocalDateTime dataAdicao;
     
     public Produto() {
         this.dataAdicao = LocalDateTime.now();
@@ -45,14 +45,13 @@ public class Produto {
     
     public String getUsuarioId() { return usuarioId; }
     public void setUsuarioId(String usuarioId) { this.usuarioId = usuarioId; }
-    
-    public double getSubtotal() {
-        return valor * quantidade;
-    }
-    
+
     @Override
     public String toString() {
         return String.format("%s - R$ %.2f x%d = R$ %.2f", 
             nome, valor, quantidade, getSubtotal());
     }
+    public double getSubtotal() {
+    return this.valor * this.quantidade;
+}
 }

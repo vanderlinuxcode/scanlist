@@ -11,13 +11,24 @@ import com.mercadoscan.service.ProdutoService;
 public class ProdutoController {
     
     private final ProdutoService produtoService;
+    private final String usuarioId;
     
     public ProdutoController(String usuarioId) {
+        this.usuarioId = usuarioId;
         this.produtoService = new ProdutoService(usuarioId);
+  
+        System.out.println("DEBUG ProdutoController criado:");
+        System.out.println("  usuarioId recebido: " + usuarioId);
     }
     
-    public void adicionarProduto(String nome, double valor, int quantidade) {
+   public void adicionarProduto(String nome, double valor, int quantidade) {
         try {
+            System.out.println("=== DEBUG ProdutoController.adicionarProduto ===");
+            System.out.println("usuarioId: " + this.usuarioId);
+            System.out.println("nome: " + nome);
+            System.out.println("valor: " + valor);
+            System.out.println("quantidade: " + quantidade);
+            
             if (nome == null || nome.trim().isEmpty()) {
                 throw new IllegalArgumentException("Nome do produto é obrigatório");
             }
@@ -30,12 +41,18 @@ public class ProdutoController {
                 throw new IllegalArgumentException("Quantidade deve ser maior que zero");
             }
             
+            System.out.println("DEBUG: Chamando produtoService.adicionarProduto...");
             produtoService.adicionarProduto(nome, valor, quantidade);
+            System.out.println("DEBUG: produtoService.adicionarProduto concluído");
             
         } catch (IllegalArgumentException e) {
+            System.err.println("❌ Erro de validação: " + e.getMessage());
             JOptionPane.showMessageDialog(null,
                 e.getMessage(), "Erro de Validação", JOptionPane.ERROR_MESSAGE);
             throw e;
+        } catch (Exception e) {
+            System.err.println("❌ Erro inesperado no controller: " + e.getMessage());
+            throw new RuntimeException("Erro ao adicionar produto", e);
         }
     }
     
@@ -49,9 +66,15 @@ public class ProdutoController {
         }
     }
     
-    public List<Produto> listarProdutos() {
-        return produtoService.listarProdutos();
-    }
+public List<Produto> listarProdutos() {
+    System.out.println("DEBUG ProdutoController.listarProdutos()");
+    System.out.println("UsuarioId para listagem: " + this.usuarioId);
+    
+    List<Produto> produtos = produtoService.listarProdutosPorUsuario(this.usuarioId);
+    System.out.println("DEBUG: " + produtos.size() + " produtos encontrados");
+    
+    return produtos;
+}
     
     public void removerProduto(String produtoId) {
         boolean sucesso = produtoService.removerProduto(produtoId);
@@ -62,15 +85,10 @@ public class ProdutoController {
         }
     }
     
-    public void removerProdutoPorNome(String nome) {
-        boolean sucesso = produtoService.removerProdutoPorNome(nome);
-        
-        if (!sucesso) {
-            JOptionPane.showMessageDialog(null,
-                "Produto não encontrado: " + nome, 
-                "Aviso", JOptionPane.WARNING_MESSAGE);
-        }
-    }
+    public void removerProdutoPorNome(String produtoNome) {
+    System.out.println("DEBUG: Removendo produto: " + produtoNome);
+    produtoService.removerProdutoPorNome(produtoNome);
+}
     
     public void limparLista() {
         int confirm = JOptionPane.showConfirmDialog(null,
@@ -85,9 +103,17 @@ public class ProdutoController {
         }
     }
     
-    public double calcularTotal() {
-        return produtoService.calcularTotal();
+public double calcularTotal() {
+    List<Produto> produtos = listarProdutos();
+    double total = 0.0;
+    
+    for (Produto produto : produtos) {
+        total += produto.getSubtotal();
     }
+    
+    System.out.println("DEBUG: Total calculado: R$ " + total);
+    return total;
+}
     
     public int contarProdutos() {
         return produtoService.contarProdutos();
@@ -115,5 +141,9 @@ public class ProdutoController {
 
 // Limpar lista após compra
 produtoService.limparLista();
+    }
+
+    public String getUsuarioId() {
+        return usuarioId;
     }
 }

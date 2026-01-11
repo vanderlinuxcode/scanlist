@@ -11,4 +11,7 @@ public interface ProdutoDAO {
     boolean removerTodosDoUsuario(String usuarioId);
     List<Produto> buscarPorNome(String nome, String usuarioId);
     double calcularTotalUsuario(String usuarioId);
+    List<Produto> listarPorUsuarioId(String usuarioId);
+    void removerPorNomeEUsuario(String nome, String usuarioId);
+    void removerTodosPorUsuario(String usuarioId);
 }

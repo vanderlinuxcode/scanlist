@@ -1,14 +1,15 @@
 package com.mercadoscan.service;
 
+import java.util.Optional;
+import java.util.Random;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.mercadoscan.dao.UsuarioDAO;
 import com.mercadoscan.dao.UsuarioDAOImpl;
 import com.mercadoscan.model.Usuario;
 import com.mercadoscan.util.ValidadorUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
-import java.util.Random;
 
 /**
  * Service layer - Contém a lógica de negócio
@@ -149,13 +150,19 @@ public class UsuarioService {
             // Simular delay de envio
             Thread.sleep(1000);
             
-            System.out.println("\n" +
-                "╔══════════════════════════════════════════╗\n" +
-                "║        📱 SIMULAÇÃO DE SMS               ║\n" +
-                "╠══════════════════════════════════════════╣\n" +
-                "║ Para: " + String.format("%-30s", telefone) + "║\n" +
-                "║ Token: " + String.format("%-30s", token) + "║\n" +
-                "╚══════════════════════════════════════════╝\n");
+            System.out.println(String.format("""
+                        
+                        ╔══════════════════════════════════════════╗
+                        ║        📱 SIMULAÇÃO DE SMS               ║
+                        ╠══════════════════════════════════════════╣
+                        ║ Para: \
+                        %s\
+                        ║
+                        ║ Token: \
+                        %s\
+                        ║
+                        ╚══════════════════════════════════════════╝
+                        """, String.format("%-30s", telefone), String.format("%-30s", token)));
             
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

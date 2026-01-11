@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.HeadlessException;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -44,17 +45,37 @@ public class ListaComprasView extends JFrame {
     private JButton btnRemover;
     private JButton btnLimpar;
     private JButton btnFinalizar;
+    private String usuarioId;
     
     public ListaComprasView(String usuarioId, String usuarioNome) {
-        this.usuarioNome = usuarioNome;
-        this.produtoController = new ProdutoController(usuarioId);
-        
-        initComponents();
-        configurarJanela();
-        carregarProdutos();
-        criarMenu();
-    }
+    this.usuarioId = usuarioId;
+    this.usuarioNome = usuarioNome;
     
+    System.out.println("=== CONSTRUTOR ListaComprasView ===");
+    System.out.println("UsuarioId: " + usuarioId);
+    System.out.println("UsuarioNome: " + usuarioNome);
+    
+    this.produtoController = new ProdutoController(usuarioId);
+    
+    // TESTE TEMPORÁRIO
+    testeProdutoInicial();
+    
+    initComponents();
+    configurarJanela();
+    carregarProdutos();
+    criarMenu();
+}
+    
+private void testeProdutoInicial() {
+    System.out.println("=== TESTE PRODUTO INICIAL ===");
+    try {
+        // Tenta adicionar um produto de teste
+        produtoController.adicionarProduto("TESTE_MONGO", 10.50, 2);
+        System.out.println("✅ Teste de produto adicionado");
+    } catch (Exception e) {
+        System.err.println("❌ Teste falhou: " + e.getMessage());
+    }
+}
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         
@@ -189,22 +210,32 @@ public class ListaComprasView extends JFrame {
         setJMenuBar(menuBar);
     }
     
-    private void carregarProdutos() {
-        tableModel.setRowCount(0);
+   private void carregarProdutos() {
+    System.out.println("=== DEBUG carregarProdutos ===");
+    System.out.println("UsuarioId para busca: " + this.usuarioId);
+    
+    tableModel.setRowCount(0);
+    
+    List<Produto> produtos = produtoController.listarProdutos();
+    System.out.println("DEBUG: Número de produtos retornados: " + produtos.size());
+    
+    for (Produto produto : produtos) {
+        System.out.println("DEBUG Produto: " + produto.getNome() + 
+                         " | Valor: " + produto.getValor() + 
+                         " | Quant: " + produto.getQuantidade() +
+                         " | UsuarioId: " + produto.getUsuarioId());
         
-        List<Produto> produtos = produtoController.listarProdutos();
-        for (Produto produto : produtos) {
-            Object[] row = {
-                produto.getNome(),
-                String.format("R$ %.2f", produto.getValor()),
-                produto.getQuantidade(),
-                String.format("R$ %.2f", produto.getSubtotal())
-            };
-            tableModel.addRow(row);
-        }
-        
-        atualizarEstatisticas();
+        Object[] row = {
+            produto.getNome(),
+            String.format("R$ %.2f", produto.getValor()),
+            produto.getQuantidade(),
+            String.format("R$ %.2f", produto.getSubtotal())
+        };
+        tableModel.addRow(row);
     }
+    
+    atualizarEstatisticas();
+}
     
     private void atualizarEstatisticas() {
         int quantidade = tableModel.getRowCount();
@@ -214,57 +245,70 @@ public class ListaComprasView extends JFrame {
         lblTotal.setText(String.format("Total: R$ %.2f", total));
     }
     
-    private void adicionarManual() {
-        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        JTextField txtNome = new JTextField(20);
-        JTextField txtValor = new JTextField();
-        JSpinner spnQuantidade = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
-        
-        panel.add(new JLabel("Nome do produto:"));
-        panel.add(txtNome);
-        panel.add(new JLabel("Valor (R$):"));
-        panel.add(txtValor);
-        panel.add(new JLabel("Quantidade:"));
-        panel.add(spnQuantidade);
-        
-        int result = JOptionPane.showConfirmDialog(this, panel,
-            "Adicionar Produto", JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.PLAIN_MESSAGE);
-        
-        if (result == JOptionPane.OK_OPTION) {
-            try {
-                String nome = txtNome.getText().trim();
-                if (nome.isEmpty()) {
-                    throw new IllegalArgumentException("Nome é obrigatório");
-                }
-                
-                double valor = Double.parseDouble(txtValor.getText().replace(",", "."));
-                if (valor <= 0) {
-                    throw new IllegalArgumentException("Valor deve ser positivo");
-                }
-                
-                int quantidade = (Integer) spnQuantidade.getValue();
-                
-                produtoController.adicionarProduto(nome, valor, quantidade);
-                carregarProdutos();
-                
-                JOptionPane.showMessageDialog(this,
-                    "Produto adicionado com sucesso!",
-                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this,
-                    "Valor inválido! Use números (ex: 5.99)",
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-            } catch (IllegalArgumentException e) {
-                JOptionPane.showMessageDialog(this,
-                    e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
+   private void adicionarManual() {
+    JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+    panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    
+    JTextField txtNome = new JTextField(20);
+    JTextField txtValor = new JTextField();
+    JSpinner spnQuantidade = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
+    
+    panel.add(new JLabel("Nome do produto:"));
+    panel.add(txtNome);
+    panel.add(new JLabel("Valor (R$):"));
+    panel.add(txtValor);
+    panel.add(new JLabel("Quantidade:"));
+    panel.add(spnQuantidade);
+    
+    int result = JOptionPane.showConfirmDialog(this, panel,
+        "Adicionar Produto", JOptionPane.OK_CANCEL_OPTION,
+        JOptionPane.PLAIN_MESSAGE);
+    
+    if (result == JOptionPane.OK_OPTION) {
+        try {
+            String nome = txtNome.getText().trim();
+            if (nome.isEmpty()) {
+                throw new IllegalArgumentException("Nome é obrigatório");
             }
+            
+            double valor = Double.parseDouble(txtValor.getText().replace(",", "."));
+            if (valor <= 0) {
+                throw new IllegalArgumentException("Valor deve ser positivo");
+            }
+            
+            int quantidade = (Integer) spnQuantidade.getValue();
+            
+            // DEBUG: Verifique se está chamando corretamente
+            System.out.println("=== DEBUG ListaComprasView ===");
+            System.out.println("Chamando produtoController.adicionarProduto()");
+            System.out.println("UsuarioId: " + this.usuarioId);
+            System.out.println("Nome: " + nome);
+            System.out.println("Valor: " + valor);
+            System.out.println("Quantidade: " + quantidade);
+            
+            produtoController.adicionarProduto(nome, valor, quantidade);
+            carregarProdutos();
+            
+            JOptionPane.showMessageDialog(this,
+                "Produto adicionado com sucesso!",
+                "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this,
+                "Valor inválido! Use números (ex: 5.99)",
+                "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this,
+                e.getMessage(),
+                "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (HeadlessException e) {
+            System.err.println("❌ ERRO inesperado em adicionarManual: " + e.getMessage());
+            JOptionPane.showMessageDialog(this,
+                "Erro ao adicionar produto: " + e.getMessage(),
+                "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
+}
     
     private void removerProduto() {
         int selectedRow = tabelaProdutos.getSelectedRow();
@@ -383,5 +427,13 @@ public class ListaComprasView extends JFrame {
                                             
                                             \u00a9 2024 MercadoScan""",
             "Sobre", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    public String getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(String usuarioId) {
+        this.usuarioId = usuarioId;
     }
 }
