@@ -16,12 +16,12 @@ public class ProdutoController {
     public ProdutoController(String usuarioId) {
         this.usuarioId = usuarioId;
         this.produtoService = new ProdutoService(usuarioId);
-  
+
         System.out.println("DEBUG ProdutoController criado:");
         System.out.println("  usuarioId recebido: " + usuarioId);
     }
     
-   public void adicionarProduto(String nome, double valor, int quantidade) {
+public void adicionarProduto(String nome, double valor, int quantidade) {
         try {
             System.out.println("=== DEBUG ProdutoController.adicionarProduto ===");
             System.out.println("usuarioId: " + this.usuarioId);
@@ -76,32 +76,21 @@ public List<Produto> listarProdutos() {
     return produtos;
 }
     
-    public void removerProduto(String produtoId) {
-        boolean sucesso = produtoService.removerProduto(produtoId);
+   // public void removerProduto(String produtoId) {
+       // boolean sucesso = produtoService.removerProduto(produtoId);
         
-        if (!sucesso) {
-            JOptionPane.showMessageDialog(null,
-                "Erro ao remover produto", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
+      //  if (!sucesso) {
+          //  JOptionPane.showMessageDialog(null,
+         //       "Erro ao remover produto", "Erro", JOptionPane.ERROR_MESSAGE);
+       // }
+  //  }
     
     public void removerProdutoPorNome(String produtoNome) {
     System.out.println("DEBUG: Removendo produto: " + produtoNome);
     produtoService.removerProdutoPorNome(produtoNome);
 }
     
-    public void limparLista() {
-        int confirm = JOptionPane.showConfirmDialog(null,
-            "Tem certeza que deseja limpar toda a lista de compras?",
-            "Confirmar", JOptionPane.YES_NO_OPTION);
-        
-        if (confirm == JOptionPane.YES_OPTION) {
-            produtoService.limparLista();
-            JOptionPane.showMessageDialog(null,
-                "Lista de compras limpa com sucesso!",
-                "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
+
     
 public double calcularTotal() {
     List<Produto> produtos = listarProdutos();
@@ -139,11 +128,12 @@ public double calcularTotal() {
     Obrigado pela compra!""".formatted(quantidade, total),
     "Compra Finalizada", JOptionPane.INFORMATION_MESSAGE);
 
-// Limpar lista após compra
-produtoService.limparLista();
+   // >>>>>>> este apaga toda a compra
+//produtoService.limparLista();
+ //Limpar lista após compra
     }
 
-    public String getUsuarioId() {
-        return usuarioId;
-    }
+   // public String getUsuarioId() {
+ //      return usuarioId;
+  //  }
 }

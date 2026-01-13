@@ -56,26 +56,13 @@ public class ListaComprasView extends JFrame {
     System.out.println("UsuarioNome: " + usuarioNome);
     
     this.produtoController = new ProdutoController(usuarioId);
-    
-    // TESTE TEMPORÁRIO
-    testeProdutoInicial();
-    
+        
     initComponents();
     configurarJanela();
     carregarProdutos();
     criarMenu();
 }
-    
-private void testeProdutoInicial() {
-    System.out.println("=== TESTE PRODUTO INICIAL ===");
-    try {
-        // Tenta adicionar um produto de teste
-        produtoController.adicionarProduto("TESTE_MONGO", 10.50, 2);
-        System.out.println("✅ Teste de produto adicionado");
-    } catch (Exception e) {
-        System.err.println("❌ Teste falhou: " + e.getMessage());
-    }
-}
+
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         
@@ -158,7 +145,7 @@ private void testeProdutoInicial() {
         btnRemover.addActionListener(e -> removerProduto());
         
         btnLimpar = criarBotao("🧹 Limpar Tudo", new Color(255, 140, 0));
-        btnLimpar.addActionListener(e -> limparLista());
+       // btnLimpar.addActionListener(e -> limparLista());
         
         btnFinalizar = criarBotao("✅ Finalizar Compra", new Color(50, 205, 50));
         btnFinalizar.addActionListener(e -> finalizarCompra());
@@ -245,7 +232,7 @@ private void testeProdutoInicial() {
         lblTotal.setText(String.format("Total: R$ %.2f", total));
     }
     
-   private void adicionarManual() {
+private void adicionarManual() {
     JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
     panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     
@@ -329,24 +316,7 @@ private void testeProdutoInicial() {
                 "Aviso", JOptionPane.WARNING_MESSAGE);
         }
     }
-    
-    private void limparLista() {
-        int confirm = JOptionPane.showConfirmDialog(this, """
-                                                          Tem certeza que deseja limpar toda a lista de compras?
-                                                          Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.""",
-            "Confirmar Limpeza", JOptionPane.YES_NO_OPTION,
-            JOptionPane.WARNING_MESSAGE);
         
-        if (confirm == JOptionPane.YES_OPTION) {
-            produtoController.limparLista();
-            carregarProdutos();
-            
-            JOptionPane.showMessageDialog(this,
-                "Lista limpa com sucesso!",
-                "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-    
     private void finalizarCompra() {
         int quantidade = tableModel.getRowCount();
         if (quantidade == 0) {

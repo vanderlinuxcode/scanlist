@@ -2,13 +2,15 @@ package com.mercadoscan.model;
 
 import java.time.LocalDateTime;
 
+import org.bson.types.ObjectId;
+
 public class Produto {
     private String id;
     private String nome;
+    private String usuarioId;
     private double valor;
     private int quantidade;
     private String categoria;
-    private String usuarioId;
     private LocalDateTime dataAdicao;
     
     public Produto() {
@@ -54,4 +56,8 @@ public class Produto {
     public double getSubtotal() {
     return this.valor * this.quantidade;
 }
+
+    public ObjectId getObjectId(String string) {
+        throw new UnsupportedOperationException("Unimplemented method 'getObjectId'");
+    }
 }

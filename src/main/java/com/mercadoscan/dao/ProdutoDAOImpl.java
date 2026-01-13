@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
@@ -28,104 +27,90 @@ public class ProdutoDAOImpl implements ProdutoDAO {
         MongoClient mongoClient = MongoClients.create("mongodb://192.168.24.128:27017");
         MongoDatabase database = mongoClient.getDatabase("mercadoscan_db");
         this.collection = database.getCollection("produtos");
+        System.out.println("✅ ProdutoDAOImpl inicializado");
     }
     
- @Override
-public Produto salvar(Produto produto) {
-    System.out.println("=== DEBUG ProdutoDAOImpl.salvar INICIO ===");
-    
-    try {
-        Document doc = toDocument(produto);
-        System.out.println("DEBUG: Document para inserir: " + doc.toJson());
+    @Override
+    public Produto salvar(Produto produto) {
+        System.out.println("\n=== DEBUG SALVAR PRODUTO ===");
+        System.out.println("📦 Produto recebido:");
+        System.out.println("   Nome: " + produto.getNome());
+        System.out.println("   Valor: " + produto.getValor());
+        System.out.println("   Quantidade: " + produto.getQuantidade());
+        System.out.println("   UsuarioId: " + produto.getUsuarioId());
         
-        // VERIFIQUE A COLLECTION
-        System.out.println("DEBUG: Collection name: " + collection.getNamespace());
-        
-        // Tente inserir e capture o resultado
-        InsertOneResult result = collection.insertOne(doc);
-        System.out.println("DEBUG: Resultado da inserção: " + result);
-        
-        if (result != null) {
-            BsonValue insertedId = result.getInsertedId();
+        try {
+            Document doc = toDocument(produto);
+            System.out.println("📄 Documento para inserir: " + doc.toJson());
             
+            // INSERÇÃO SIMPLES - NÃO chama fromDocument depois!
+            @SuppressWarnings("unused")
+            InsertOneResult result = collection.insertOne(doc);
+            System.out.println("✅ Inserção realizada");
+            
+            // Pega o ID do documento inserido
+            ObjectId insertedId = doc.getObjectId("_id");
             if (insertedId != null) {
-                System.out.println("DEBUG: InsertedId tipo: " + insertedId.getBsonType());
-                
-                // Verificar se é ObjectId
-                if (insertedId.isObjectId()) {
-                    // Usar getter seguro
-                    org.bson.BsonObjectId bsonObjectId = insertedId.asObjectId();
-                    if (bsonObjectId != null) {
-                        ObjectId objectId = bsonObjectId.getValue();
-                        if (objectId != null) {
-                            produto.setId(objectId.toString());
-                            System.out.println("✅ Produto salvo com sucesso! ID: " + produto.getId());
-                        } else {
-                            System.err.println("❌ ObjectId é null!");
-                        }
-                    } else {
-                        System.err.println("❌ BsonObjectId é null!");
-                    }
-                } else {
-                    // Se não for ObjectId, usar alternativa
-                    System.out.println("⚠️ InsertedId não é ObjectId, usando valor como string");
-                    produto.setId(insertedId.toString());
-                }
+                produto.setId(insertedId.toString());
+                System.out.println("✅ ID gerado: " + produto.getId());
             } else {
-                System.err.println("❌ ERRO: InsertedId é null!");
-                // Tentar obter ID do documento
-                ObjectId objectId = doc.getObjectId("_id");
-                if (objectId != null) {
-                    produto.setId(objectId.toString());
-                    System.out.println("✅ ID obtido do documento: " + produto.getId());
-                }
+                System.err.println("⚠️ ID não foi gerado automaticamente");
             }
-        } else {
-            System.err.println("❌ ERRO: Result é null!");
+            
+            return produto; // Retorna o mesmo produto com ID atualizado
+            
+        } catch (Exception e) {
+            System.err.println("❌ ERRO ao salvar produto: " + e.getMessage());
+            throw new RuntimeException("Erro ao salvar produto no banco", e);
         }
-        
-        // VERIFICAÇÃO APÓS INSERÇÃO
-        if (produto.getId() != null) {
-            try {
-                Document filtro = new Document("_id", new ObjectId(produto.getId()));
-                Document encontrado = collection.find(filtro).first();
-                if (encontrado != null) {
-                    System.out.println("✅ Confirmação: Produto encontrado após inserção!");
-                } else {
-                    System.err.println("❌ ALERTA: Produto NÃO encontrado após inserção!");
-                }
-            } catch (Exception e) {
-                System.err.println("❌ Erro na verificação: " + e.getMessage());
-            }
-        }
-        
-   } catch (Exception e) {
-        System.err.println("❌ EXCEÇÃO NO TESTE:");
-        System.err.println("Mensagem: " + e.getMessage());
-        System.err.println("\nStack Trace:");
     }
-    
-    System.out.println("=== DEBUG ProdutoDAOImpl.salvar FIM ===");
-    return produto;
-}
     
     @Override
     public List<Produto> buscarPorUsuario(String usuarioId) {
+        System.out.println("\n=== DEBUG buscarPorUsuario ===");
+        System.out.println("UsuarioId: " + usuarioId);
+        
         List<Produto> produtos = new ArrayList<>();
         
-        for (Document doc : collection.find(Filters.eq("usuarioId", usuarioId))) {
-            produtos.add(fromDocument(doc));
+        try (MongoCursor<Document> cursor = collection.find(
+            Filters.eq("usuarioId", usuarioId)).iterator()) {
+            
+            int count = 0;
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                count++;
+                System.out.println("📄 Documento " + count + ": " + doc.toJson());
+                
+                Produto produto = fromDocument(doc);
+                produtos.add(produto);
+            }
+            
+            System.out.println("✅ Total encontrado: " + count + " produtos");
+            
+        } catch (Exception e) {
+            System.err.println("❌ Erro ao buscar produtos: " + e.getMessage());
         }
         
         return produtos;
     }
     
     @Override
+    public List<Produto> listarPorUsuarioId(String usuarioId) {
+        // Reutiliza o método buscarPorUsuario
+        System.out.println("DEBUG: listarPorUsuarioId chamado para: " + usuarioId);
+        return buscarPorUsuario(usuarioId);
+    }
+    
+    @Override
     public boolean remover(String produtoId) {
         try {
-            collection.deleteOne(Filters.eq("_id", new ObjectId(produtoId)));
-            return true;
+            System.out.println("DEBUG: Removendo produto ID: " + produtoId);
+            DeleteResult result = collection.deleteOne(Filters.eq("_id", new ObjectId(produtoId)));
+            boolean removido = result.getDeletedCount() > 0;
+            System.out.println("✅ Produto removido: " + removido);
+            return removido;
         } catch (Exception e) {
+            System.err.println("❌ Erro ao remover produto: " + e.getMessage());
             return false;
         }
     }
@@ -133,130 +118,174 @@ public Produto salvar(Produto produto) {
     @Override
     public boolean removerTodosDoUsuario(String usuarioId) {
         try {
-            collection.deleteMany(Filters.eq("usuarioId", usuarioId));
-            return true;
+            System.out.println("DEBUG: Removendo todos produtos do usuário: " + usuarioId);
+            DeleteResult result = collection.deleteMany(Filters.eq("usuarioId", usuarioId));
+            System.out.println("✅ " + result.getDeletedCount() + " produtos removidos");
+            return result.getDeletedCount() > 0;
         } catch (Exception e) {
+            System.err.println("❌ Erro ao remover produtos: " + e.getMessage());
             return false;
         }
     }
     
     @Override
+    public void removerPorNomeEUsuario(String nome, String usuarioId) {
+        try {
+            System.out.println("DEBUG: Removendo produto '" + nome + "' do usuário: " + usuarioId);
+            DeleteResult result = collection.deleteOne(
+                Filters.and(
+                    Filters.eq("nome", nome),
+                    Filters.eq("usuarioId", usuarioId)
+                )
+            );
+            System.out.println("✅ Produto removido: " + result.getDeletedCount() + " deletado(s)");
+        } catch (Exception e) {
+            System.err.println("❌ Erro ao remover produto por nome: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public void removerTodosPorUsuario(String usuarioId) {
+        removerTodosDoUsuario(usuarioId); // Reutiliza implementação
+    }
+    
+    @Override
     public List<Produto> buscarPorNome(String nome, String usuarioId) {
+        System.out.println("\n=== DEBUG buscarPorNome ===");
+        System.out.println("Nome: " + nome + ", UsuarioId: " + usuarioId);
+        
         List<Produto> produtos = new ArrayList<>();
         
-        for (Document doc : collection.find(
+        try (MongoCursor<Document> cursor = collection.find(
             Filters.and(
                 Filters.eq("usuarioId", usuarioId),
                 Filters.regex("nome", ".*" + nome + ".*", "i")
-            )
-        )) {
-            produtos.add(fromDocument(doc));
+            )).iterator()) {
+            
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                produtos.add(fromDocument(doc));
+            }
+            
+        } catch (Exception e) {
+            System.err.println("❌ Erro ao buscar por nome: " + e.getMessage());
         }
         
+        System.out.println("✅ Produtos encontrados: " + produtos.size());
         return produtos;
     }
     
     @Override
     public double calcularTotalUsuario(String usuarioId) {
+        System.out.println("\n=== DEBUG calcularTotalUsuario ===");
+        
         double total = 0.0;
         List<Produto> produtos = buscarPorUsuario(usuarioId);
         
         for (Produto produto : produtos) {
-            total += produto.getSubtotal();
+            double subtotal = produto.getValor() * produto.getQuantidade();
+            total += subtotal;
+            System.out.println("   " + produto.getNome() + ": R$ " + subtotal);
         }
         
+        System.out.println("✅ Total: R$ " + total);
         return total;
     }
     
-private Document toDocument(Produto produto) {
-    System.out.println("DEBUG: Criando Document para MongoDB");
+    // ==================== MÉTODOS PRIVADOS AUXILIARES ====================
     
-    Document doc = new Document()
-        .append("nome", produto.getNome())
-        .append("valor", produto.getValor())
-        .append("quantidade", produto.getQuantidade())
-        .append("usuarioId", produto.getUsuarioId())
-        .append("dataCriacao", new Date());
-    
-    System.out.println("DEBUG: Document final: " + doc.toJson());
-    return doc;
-}
-    
-   private Produto fromDocument(Document doc) {
-    Produto produto = new Produto();
-    
-    // Extrair ObjectId e converter para String
-    ObjectId objectId = doc.getObjectId("_id");
-    if (objectId != null) {
-        produto.setId(objectId.toString());
+    private Document toDocument(Produto produto) {
+        System.out.println("DEBUG: Convertendo Produto para Document");
+        
+        Document doc = new Document()
+            .append("nome", produto.getNome())
+            .append("valor", produto.getValor())
+            .append("quantidade", produto.getQuantidade())
+            .append("usuarioId", produto.getUsuarioId())
+            .append("dataCriacao", new Date());
+        
+        // Se o produto já tem ID (atualização), inclui
+        if (produto.getId() != null && !produto.getId().isEmpty()) {
+            try {
+                doc.append("_id", new ObjectId(produto.getId()));
+            } catch (Exception e) {
+                System.err.println("⚠️ ID inválido: " + produto.getId());
+            }
+        }
+        
+        return doc;
     }
     
-    produto.setNome(doc.getString("nome"));
-    produto.setValor(doc.getDouble("valor"));
-    produto.setQuantidade(doc.getInteger("quantidade"));
-    produto.setUsuarioId(doc.getString("usuarioId"));
-    
-    // Verificar se tem dataCriacao
-    if (doc.containsKey("dataCriacao")) {
-        @SuppressWarnings("unused")
-        Date dataCriacao = doc.getDate("dataCriacao");
-        // Se quiser pode setar em um campo dataCriacao no Produto
+    // ⚠️ MÉTODO PRIVADO - não faz parte da interface!
+    private Produto fromDocument(Document doc) {
+        System.out.println("DEBUG: Convertendo Document para Produto");
+        
+        Produto produto = new Produto();
+        
+        try {
+            // ID
+            ObjectId objectId = doc.getObjectId("_id");
+            if (objectId != null) {
+                produto.setId(objectId.toString());
+            }
+            
+            // Campos obrigatórios
+            produto.setNome(doc.getString("nome"));
+            produto.setUsuarioId(doc.getString("usuarioId"));
+            
+            // Valor (pode vir em diferentes formatos)
+            Object valorObj = doc.get("valor");
+            if (valorObj != null) {
+                switch (valorObj) {
+                    case Double aDouble -> produto.setValor(aDouble);
+                    case Integer integer -> produto.setValor(integer.doubleValue());
+                    case String string -> {
+                        try {
+                            produto.setValor(Double.parseDouble(string));
+                        } catch (NumberFormatException e) {
+                            produto.setValor(0.0);
+                        }
+                    }
+                    default -> {
+                    }
+                }
+            } else {
+                produto.setValor(0.0);
+            }
+            
+            // Quantidade
+            Object qtdObj = doc.get("quantidade");
+            if (qtdObj != null) {
+                if (qtdObj instanceof Integer integer) {
+                    produto.setQuantidade(integer);
+                } else if (!(qtdObj instanceof Double aDouble)) {
+                    if (qtdObj instanceof String string) {
+                        try {
+                            produto.setQuantidade(Integer.parseInt(string));
+                        } catch (NumberFormatException e) {
+                            produto.setQuantidade(1);
+                        }
+                    }
+                } else {
+                    produto.setQuantidade(aDouble.intValue());
+                }
+            } else {
+                produto.setQuantidade(1);
+            }
+            
+            System.out.println("✅ Produto convertido: " + produto.getNome());
+            
+        } catch (Exception e) {
+            System.err.println("❌ Erro ao converter documento: " + e.getMessage());
+            System.err.println("Documento: " + doc.toJson());
+        }
+        
+        return produto;
     }
-    
-    System.out.println("DEBUG: Produto convertido: " + produto.getNome() + 
-                    " (ID: " + produto.getId() + ")");
-    
-    return produto;
-}
     
     @SuppressWarnings("unused")
     private LocalDateTime toLocalDateTime(Date date) {
+        if (date == null) return null;
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
-    @Override
-public List<Produto> listarPorUsuarioId(String usuarioId) {
-    System.out.println("=== DEBUG ProdutoDAOImpl.listarPorUsuarioId ===");
-    System.out.println("Buscando no MongoDB para usuarioId: " + usuarioId);
-    
-    List<Produto> produtos = new ArrayList<>();
-    
-    // Criar filtro para buscar produtos deste usuário
-    Document filtro = new Document("usuarioId", usuarioId);
-    System.out.println("DEBUG: Filtro MongoDB: " + filtro.toJson());
-    
-    try (MongoCursor<Document> cursor = collection.find(filtro).iterator()) {
-        int count = 0;
-        while (cursor.hasNext()) {
-            Document doc = cursor.next();
-            System.out.println("DEBUG: Document encontrado " + (++count) + ": " + doc.toJson());
-            
-            Produto produto = fromDocument(doc);
-            produtos.add(produto);
-        }
-        System.out.println("DEBUG: Total de documentos encontrados: " + count);
-    } catch (Exception e) {
-        System.err.println("❌ ERRO ao listar produtos do MongoDB: " + e.getMessage());
-    }
-    
-    System.out.println("DEBUG: Retornando " + produtos.size() + " produtos");
-    return produtos;
-}
-@Override
-public void removerPorNomeEUsuario(String nome, String usuarioId) {
-    Document filtro = new Document()
-        .append("nome", nome)
-        .append("usuarioId", usuarioId);
-    
-    collection.deleteOne(filtro);
-    System.out.println("DEBUG: Produto removido: " + nome);
-}
-
-@Override
-public void removerTodosPorUsuario(String usuarioId) {
-    Document filtro = new Document("usuarioId", usuarioId);
-    
-    DeleteResult result = collection.deleteMany(filtro);
-    System.out.println("DEBUG: " + result.getDeletedCount() + " produtos removidos do usuário: " + usuarioId);
-}
-
 }
