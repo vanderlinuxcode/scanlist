@@ -9,8 +9,7 @@ public class MongoDBConnection {
     private static MongoClient mongoClient;
     private static MongoDatabase database;
     
-    private MongoDBConnection() {} // Construtor privado
-    
+    private MongoDBConnection() {} 
     public static synchronized MongoDatabase getDatabase() {
         if (database == null) {
             try {

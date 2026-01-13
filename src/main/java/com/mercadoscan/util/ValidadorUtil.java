@@ -114,7 +114,7 @@ public class ValidadorUtil {
         if (telefone.length() != 11) return telefone;
         
         return "(" + telefone.substring(0, 2) + ") " +
-               telefone.substring(2, 7) + "-" +
-               telefone.substring(7, 11);
+            telefone.substring(2, 7) + "-" +
+            telefone.substring(7, 11);
     }
 }
