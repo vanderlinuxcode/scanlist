@@ -83,8 +83,8 @@ public class UsuarioController {
             
             if (loginSucesso) {
                 JOptionPane.showMessageDialog(null,
-                    "Login realizado com sucesso!",
-                    "Bem-vindo", JOptionPane.INFORMATION_MESSAGE);
+                    "Acesso concedido!",
+                    "Obrigado por estar aqui", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(null,
                     "CPF, senha inválidos ou conta não confirmada",

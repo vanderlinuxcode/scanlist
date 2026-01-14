@@ -78,9 +78,9 @@ public class ProdutoService {
         return produtoDAO.salvar(produto);
     }
     
-    //public boolean removerProduto(String produtoId) {
-      //  return produtoDAO.remover(produtoId);
-  //  }
+    public boolean removerProduto(String produtoId) {
+        return produtoDAO.remover(produtoId);
+}
     
     public boolean removerProdutoPorNome(String nome) {
         List<Produto> produtos = produtoDAO.buscarPorNome(nome, usuarioId);

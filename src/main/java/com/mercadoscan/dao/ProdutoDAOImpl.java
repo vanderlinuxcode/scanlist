@@ -20,14 +20,40 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertOneResult;
 
 public class ProdutoDAOImpl implements ProdutoDAO {
-    
-    private final MongoCollection<Document> collection;
+    private MongoCollection<Document> collection;
     
     public ProdutoDAOImpl() {
-        MongoClient mongoClient = MongoClients.create("mongodb://192.168.24.128:27017");
-        MongoDatabase database = mongoClient.getDatabase("mercadoscan_db");
-        this.collection = database.getCollection("produtos");
-        System.out.println("✅ ProdutoDAOImpl inicializado");
+        try {
+            MongoClient mongoClient = MongoClients.create("mongodb://192.168.24.128:27017");
+            
+            // ✅ Verifica se client foi criado
+            if (mongoClient == null) {
+                throw new RuntimeException("Falha ao criar MongoClient");
+            }
+            
+            MongoDatabase database = mongoClient.getDatabase("mercadoscan_db");
+            
+            // ✅ Verifica se database existe
+            if (database == null) {
+                throw new RuntimeException("Database 'mercadoscan_db' não encontrado");
+            }
+            
+            this.collection = database.getCollection("produtos");
+            
+            // ✅ Verifica se collection existe, cria se necessário
+            if (this.collection == null) {
+                System.out.println("⚠️ Collection 'produtos' não existe, criando...");
+                database.createCollection("produtos");
+                this.collection = database.getCollection("produtos");
+            }
+            
+            System.out.println("✅ DAO inicializado - Collection: " + 
+                (this.collection != null ? this.collection.getNamespace() : "null"));
+                
+        } catch (RuntimeException e) {
+            System.err.println("❌ Erro ao inicializar DAO: " + e.getMessage());
+            throw new RuntimeException("Falha na inicialização do DAO", e);
+        }
     }
     
     @Override

@@ -1,18 +1,22 @@
 package com.mercadoscan.dao;
 
-import com.mercadoscan.model.Usuario;
-import com.mongodb.client.*;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.Optional;
+
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.Optional;
+import com.mercadoscan.model.Usuario;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 
 /**
  * Implementação MongoDB do UsuarioDAO
@@ -37,6 +41,7 @@ public class UsuarioDAOImpl implements UsuarioDAO {
             logger.error("❌ Erro ao conectar ao MongoDB", e);
             throw new RuntimeException("Falha na conexão com o banco de dados", e);
         }
+        logger.info("✅ Conectado ao MongoDB: mercadoscan_db");
     }
     
     @Override

@@ -76,14 +76,14 @@ public List<Produto> listarProdutos() {
     return produtos;
 }
     
-   // public void removerProduto(String produtoId) {
-       // boolean sucesso = produtoService.removerProduto(produtoId);
+    public void removerProduto(String produtoId) {
+       boolean sucesso = produtoService.removerProduto(produtoId);
         
-      //  if (!sucesso) {
-          //  JOptionPane.showMessageDialog(null,
-         //       "Erro ao remover produto", "Erro", JOptionPane.ERROR_MESSAGE);
-       // }
-  //  }
+       if (!sucesso) {
+            JOptionPane.showMessageDialog(null,
+               "Erro ao remover produto", "Erro", JOptionPane.ERROR_MESSAGE);
+       }
+   }
     
     public void removerProdutoPorNome(String produtoNome) {
     System.out.println("DEBUG: Removendo produto: " + produtoNome);
